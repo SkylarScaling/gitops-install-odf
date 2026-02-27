@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wait-for-odf-crds
+  namespace: openshift-storage
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  template:
+    spec:
+      serviceAccountName: odf-console-patcher
+      restartPolicy: OnFailure
+      containers:
+        - name: wait
+          image: quay.io/openshift/origin-cli:latest
+          command:
+            - /bin/bash
+            - -c
+            - |
+              echo "Waiting for ODF Operator to register CRDs..."
+              oc wait --for condition=established --timeout=1200s crd/storageclusters.ocs.openshift.io
+              oc wait --for condition=established --timeout=1200s crd/storagesystems.odf.openshift.io
+              echo "CRDs successfully registered! ArgoCD will now apply Wave 1."

@@ -4,8 +4,11 @@ metadata:
   name: openshift-storage
   labels:
     openshift.io/cluster-monitoring: "true"
+    # Required for ODF 4.14+ pod security admission
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged
   annotations:
-#    openshift.io/node-selector: 'cluster.ocs.openshift.io/openshift-storage='
+    argocd.argoproj.io/sync-wave: "0"
     scheduler.alpha.kubernetes.io/defaultTolerations: >-
       [{"effect": "NoSchedule", "key": "node.ocs.openshift.io/storage"}]
-    argocd.argoproj.io/sync-wave: "-1"

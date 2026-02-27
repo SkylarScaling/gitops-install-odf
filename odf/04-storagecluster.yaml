@@ -7,27 +7,34 @@ metadata:
     uninstall.ocs.openshift.io/cleanup-policy: delete
     uninstall.ocs.openshift.io/mode: graceful
     argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
+  manageNodes: false
+  monDataDirHostPath: /var/lib/rook
   placement:
     all:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: cluster.ocs.openshift.io/openshift-storage
+                  operator: Exists
       tolerations:
-        - key: node.ocs.openshift.io/storage
-          effect: NoSchedule
+        - effect: NoSchedule
+          key: node.ocs.openshift.io/storage
           value: "true"
-  arbiter: {}
-  encryption:
-    kms: {}
-  externalStorage: {}
-  managedResources:
-    cephBlockPools: {}
-    cephCluster: {}
-    cephConfig: {}
-    cephDashboard: {}
-    cephFilesystems: {}
-    cephObjectStoreUsers: {}
-    cephObjectStores: {}
-    cephToolbox: {}
-  mirroring: {}
-  multiCloudGateway:
-    dbStorageClassName: gp3-csi
-    reconcileStrategy: standalone
+  storageDeviceSets:
+    - count: 1
+      dataPVCTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 2Ti
+          storageClassName: gp3-csi
+          volumeMode: Block
+      name: ocs-deviceset-gp3
+      placement: {}
+      portable: true
+      replica: 3
