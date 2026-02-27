@@ -43,7 +43,6 @@ metadata:
   namespace: openshift-storage
   annotations:
     argocd.argoproj.io/sync-wave: "0"
-    # Clean up the Job after it finishes so it doesn't clutter the namespace
     argocd.argoproj.io/hook-delete-policy: HookSucceeded
 spec:
   template:
@@ -57,7 +56,22 @@ spec:
             - /bin/bash
             - -c
             - |
-              echo "Waiting for ODF Operator to register CRDs..."
+              set -e
+              echo "Waiting for ODF Operator to create CRDs..."
+              
+              # Patiently loop until the OpenShift API recognizes the CRD name
+              until oc get crd storageclusters.ocs.openshift.io &>/dev/null; do
+                echo "Still waiting for StorageCluster CRD..."
+                sleep 5
+              done
+              
+              until oc get crd storagesystems.odf.openshift.io &>/dev/null; do
+                echo "Still waiting for StorageSystem CRD..."
+                sleep 5
+              done
+              
+              # Now that they exist, wait for them to be established and ready
               oc wait --for condition=established --timeout=1200s crd/storageclusters.ocs.openshift.io
               oc wait --for condition=established --timeout=1200s crd/storagesystems.odf.openshift.io
+              
               echo "CRDs successfully registered! ArgoCD will now apply Wave 1."
