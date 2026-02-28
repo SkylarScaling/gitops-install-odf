@@ -9,7 +9,6 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  manageNodes: false
   monDataDirHostPath: /var/lib/rook
   placement:
     all:
