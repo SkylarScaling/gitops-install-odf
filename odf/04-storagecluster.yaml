@@ -22,6 +22,14 @@ spec:
         - effect: NoSchedule
           key: node.ocs.openshift.io/storage
           value: "true"
+    storage-plugin:
+      tolerations:
+        - key: node-role.kubernetes.io/infra
+          operator: Exists
+          effect: NoSchedule
+        - key: node.ocs.openshift.io/storage
+          operator: Exists
+          effect: NoSchedule
   storageDeviceSets:
     - count: 1
       dataPVCTemplate:
