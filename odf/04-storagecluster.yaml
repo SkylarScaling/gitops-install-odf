@@ -22,12 +22,25 @@ spec:
         - effect: NoSchedule
           key: node.ocs.openshift.io/storage
           value: "true"
+    # This block OVERRIDES the 'all' block specifically for the CSI drivers
+    # allowing them to distribute to worker, infra, and master nodes.
     storage-plugin:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: kubernetes.io/os
+                  operator: In
+                  values:
+                    - linux
       tolerations:
         - key: node-role.kubernetes.io/infra
           operator: Exists
           effect: NoSchedule
         - key: node.ocs.openshift.io/storage
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/master
           operator: Exists
           effect: NoSchedule
   storageDeviceSets:
