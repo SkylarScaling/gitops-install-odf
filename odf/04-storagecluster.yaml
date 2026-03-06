@@ -4,14 +4,26 @@ metadata:
   name: ocs-storagecluster
   namespace: openshift-storage
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    uninstall.ocs.openshift.io/cleanup-policy: delete
+    uninstall.ocs.openshift.io/mode: graceful
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  manageNodes: false
   monDataDirHostPath: /var/lib/rook
-
-  # AWS-specific backing storage for ODF
+  placement:
+    all:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: cluster.ocs.openshift.io/openshift-storage
+                  operator: Exists
+      tolerations:
+        - effect: NoSchedule
+          key: node.ocs.openshift.io/storage
+          value: "true"
   storageDeviceSets:
-    - count: 3
+    - count: 1
       dataPVCTemplate:
         spec:
           accessModes:
@@ -19,27 +31,9 @@ spec:
           resources:
             requests:
               storage: 2Ti
-          storageClassName: gp3
+          storageClassName: gp3-csi
           volumeMode: Block
-      name: ocs-deviceset
+      name: ocs-deviceset-gp3
       placement: {}
       portable: true
       replica: 3
-      resources: {}
-
-  placement:
-    all:
-      tolerations:
-        - key: node.ocs.openshift.io/storage
-          operator: Equal
-          value: "true"
-          effect: NoSchedule
-    storage-plugin:
-      tolerations:
-        - key: node-role.kubernetes.io/infra
-          operator: Exists
-          effect: NoSchedule
-        - key: node.ocs.openshift.io/storage
-          operator: Equal
-          value: "true"
-          effect: NoSchedule
